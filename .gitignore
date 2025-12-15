@@ -1,0 +1,16 @@
+# Binaries
+/bin/
+*.exe
+*.exe~
+
+go.sum
+
+.vscode/
+.idea/
+
+
+.env
+.env.local
+.env.*.local
+
+*.log
