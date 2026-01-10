@@ -3,6 +3,8 @@
 *.exe
 *.exe~
 
+!AutoOnline.exe
+
 go.sum
 
 .vscode/
