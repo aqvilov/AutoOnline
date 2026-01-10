@@ -1,6 +1,8 @@
 package main
 
 import (
+	"FunPayAutoOnline/mainFunc"
+	"FunPayAutoOnline/openBrowser"
 	"bufio"
 	"fmt"
 	"log"
@@ -18,7 +20,7 @@ func main() {
 		fmt.Println("Введите url сайта в формате 'https://example.com/path': ")
 		fmt.Scan(&Url)
 
-		if IsRealUrl(Url) {
+		if mainFunc.IsRealUrl(Url) {
 			break
 		} else {
 			fmt.Println("Вы ввели неправильный URL!")
@@ -78,7 +80,7 @@ func main() {
 	fmt.Scanln()
 
 	time.Sleep(4 * time.Second)
-	OpenBrowser(Url)
+	openBrowser.OpenBrowser(Url)
 
 	reader := bufio.NewReader(os.Stdin)
 
@@ -98,7 +100,7 @@ func main() {
 		}
 
 		//Проверка тестовым запросом
-		if TestReq := MakeRequestStatus(client, Url, cookie); TestReq {
+		if TestReq := mainFunc.MakeRequestStatus(client, Url, cookie); TestReq {
 			// Тестовый запрос успешен --> куки верные
 			fmt.Println("Тестовый запрос успешен! Начинаем работу программы.")
 			break
@@ -118,7 +120,7 @@ func main() {
 	}
 
 	time.Sleep(4 * time.Second)
-	OpenBrowser(Url)
+	openBrowser.OpenBrowser(Url)
 
 	if RequestTime > allRequestTime && allRequestTime != 0 {
 		log.Printf("Ваш интервал между запросами в %d минут, превышает время работы программы в %d минут", RequestTime, allRequestTime)
@@ -131,7 +133,7 @@ func main() {
 			Timeout: 30 * time.Second,
 		}
 
-		MakeRequest(client, Url, cookie)
+		mainFunc.MakeRequest(client, Url, cookie)
 
 		ticker := time.NewTicker(time.Duration(RequestTime) * time.Minute) // 5 minutes default
 		defer ticker.Stop()
@@ -142,14 +144,14 @@ func main() {
 		if allRequestTime == 0 { // работает бесконечно ( пока не нажмут ctrl+C)
 			fmt.Println("\nВы ввели '0', запросы будут продолжаться пока вы не нажмете Ctrl+C")
 			for range ticker.C {
-				MakeRequest(client, Url, cookie)
+				mainFunc.MakeRequest(client, Url, cookie)
 			}
 		} else {
 			fmt.Printf("\nЗапросы будут отправляться %d минут!\n", allRequestTime)
 			for {
 				select {
 				case <-ticker.C:
-					MakeRequest(client, Url, cookie)
+					mainFunc.MakeRequest(client, Url, cookie)
 				case <-timeout:
 					fmt.Println("Время вышло. Программа завершена")
 					return
