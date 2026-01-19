@@ -1,4 +1,4 @@
-package mainFunc
+package MainFuncions
 
 import (
 	"log"
@@ -39,7 +39,7 @@ func MakeRequestStatus(client *http.Client, url, cookie string) bool {
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+	if resp.StatusCode >= 200 && resp.StatusCode <= 300 {
 		return true
 	} else {
 		return false

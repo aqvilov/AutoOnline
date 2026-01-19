@@ -1,8 +1,8 @@
 package main
 
 import (
-	"FunPayAutoOnline/mainFunc"
-	"FunPayAutoOnline/openBrowser"
+	MainFuncions "FunPayAutoOnline/mainFunc"
+	OpenBrowserFunc "FunPayAutoOnline/openBrowser"
 	"bufio"
 	"fmt"
 	"log"
@@ -20,7 +20,7 @@ func main() {
 		fmt.Println("Введите url сайта в формате 'https://example.com/path': ")
 		fmt.Scan(&Url)
 
-		if mainFunc.IsRealUrl(Url) {
+		if MainFuncions.IsRealUrl(Url) {
 			break
 		} else {
 			fmt.Println("Вы ввели неправильный URL!")
@@ -49,6 +49,93 @@ func main() {
 
 	//get cookie
 	fmt.Println("Введите cookie, следуя инструкции:")
+	getCookieGuide() // функция с принтом
+
+	fmt.Scanln()
+
+	time.Sleep(4 * time.Second)
+	OpenBrowserFunc.OpenBrowser(Url)
+
+	reader := bufio.NewReader(os.Stdin)
+
+	client := &http.Client{ // для тестового запроса
+		Timeout: 30 * time.Second,
+	}
+
+	var cookie string
+
+	for {
+		fmt.Println("Введите cookie, следуя инструкции:")
+		cookie, _ = reader.ReadString('\n')
+		cookie = strings.TrimSpace(cookie)
+
+		if cookie == "" {
+			continue
+		}
+
+		//Проверка тестовым запросом
+		if TestReq := MainFuncions.MakeRequestStatus(client, Url, cookie); TestReq {
+			// Тестовый запрос успешен --> куки верные
+			fmt.Println("Тестовый запрос успешен! Начинаем работу программы.")
+			break
+		} else {
+			fmt.Println("Тестовый запрос не удался. Cookie неверны, либо устарели")
+			fmt.Println("Хотите ввести Cookie заново (y/n)?")
+
+			response, _ := reader.ReadString('\n')
+			response = strings.TrimSpace(strings.ToLower(response))
+
+			if response == "y" || response == "yes" || response == "д" || response == "да" {
+				continue // переход на следующую итерацию цикла
+			} else { // пытаемся работать с исходными куки
+				return
+			}
+		}
+	}
+
+	time.Sleep(4 * time.Second)
+	OpenBrowserFunc.OpenBrowser(Url)
+
+	if RequestTime > allRequestTime && allRequestTime != 0 {
+		log.Printf("Ваш интервал между запросами в %d минут, превышает время работы программы в %d минут", RequestTime, allRequestTime)
+		return
+	} else {
+
+		timeout := time.After(time.Duration(allRequestTime) * time.Minute) // канал, который отправит сигнал через указанное время ( например через 10 минут)
+
+		client := &http.Client{
+			Timeout: 30 * time.Second,
+		}
+
+		MainFuncions.MakeRequest(client, Url, cookie)
+
+		ticker := time.NewTicker(time.Duration(RequestTime) * time.Minute) // 5 minutes default
+		defer ticker.Stop()
+
+		fmt.Printf("Запускаем запросы каждые %d минут\n", RequestTime)
+		fmt.Printf("Нажмите Ctrl+C для остановки\n")
+
+		if allRequestTime == 0 { // работает бесконечно ( пока не нажмут ctrl+C)
+			fmt.Println("\nВы ввели '0', запросы будут продолжаться пока вы не нажмете Ctrl+C")
+			for range ticker.C {
+				MainFuncions.MakeRequest(client, Url, cookie)
+			}
+		} else {
+			fmt.Printf("\nЗапросы будут отправляться %d минут!\n", allRequestTime)
+			for {
+				select {
+				case <-ticker.C:
+					MainFuncions.MakeRequest(client, Url, cookie)
+				case <-timeout:
+					fmt.Println("Время вышло. Программа завершена")
+					return
+				}
+			}
+		}
+	}
+}
+
+func getCookieGuide() {
 	fmt.Print(`
 ╔═══════════════════════════════════════════════════════════════╗
 ║                   ИНСТРУКЦИЯ ПО ПОЛУЧЕНИЮ КУКИ                ║
@@ -76,87 +163,4 @@ func main() {
 ║                                                               ║
 ╚═══════════════════════════════════════════════════════════════╝
 `)
-
-	fmt.Scanln()
-
-	time.Sleep(4 * time.Second)
-	openBrowser.OpenBrowser(Url)
-
-	reader := bufio.NewReader(os.Stdin)
-
-	client := &http.Client{ // для тестового запроса
-		Timeout: 30 * time.Second,
-	}
-
-	var cookie string
-
-	for {
-		fmt.Println("Введите cookie, следуя инструкции:")
-		cookie, _ = reader.ReadString('\n')
-		cookie = strings.TrimSpace(cookie)
-
-		if cookie == "" {
-			continue
-		}
-
-		//Проверка тестовым запросом
-		if TestReq := mainFunc.MakeRequestStatus(client, Url, cookie); TestReq {
-			// Тестовый запрос успешен --> куки верные
-			fmt.Println("Тестовый запрос успешен! Начинаем работу программы.")
-			break
-		} else {
-			fmt.Println("Тестовый запрос не удался. Cookie неверны, либо устарели")
-			fmt.Println("Хотите ввести Cookie заново (y/n)?")
-
-			response, _ := reader.ReadString('\n')
-			response = strings.TrimSpace(strings.ToLower(response))
-
-			if response == "y" || response == "yes" || response == "д" || response == "да" {
-				continue // переход на следующую итерацию цикла
-			} else { // пытаемся работать с исходными куки
-				return
-			}
-		}
-	}
-
-	time.Sleep(4 * time.Second)
-	openBrowser.OpenBrowser(Url)
-
-	if RequestTime > allRequestTime && allRequestTime != 0 {
-		log.Printf("Ваш интервал между запросами в %d минут, превышает время работы программы в %d минут", RequestTime, allRequestTime)
-		return
-	} else {
-
-		timeout := time.After(time.Duration(allRequestTime) * time.Minute) // канал, который отправит сигнал через указанное время ( например через 10 минут)
-
-		client := &http.Client{
-			Timeout: 30 * time.Second,
-		}
-
-		mainFunc.MakeRequest(client, Url, cookie)
-
-		ticker := time.NewTicker(time.Duration(RequestTime) * time.Minute) // 5 minutes default
-		defer ticker.Stop()
-
-		fmt.Printf("Запускаем запросы каждые %d минут\n", RequestTime)
-		fmt.Printf("Нажмите Ctrl+C для остановки\n")
-
-		if allRequestTime == 0 { // работает бесконечно ( пока не нажмут ctrl+C)
-			fmt.Println("\nВы ввели '0', запросы будут продолжаться пока вы не нажмете Ctrl+C")
-			for range ticker.C {
-				mainFunc.MakeRequest(client, Url, cookie)
-			}
-		} else {
-			fmt.Printf("\nЗапросы будут отправляться %d минут!\n", allRequestTime)
-			for {
-				select {
-				case <-ticker.C:
-					mainFunc.MakeRequest(client, Url, cookie)
-				case <-timeout:
-					fmt.Println("Время вышло. Программа завершена")
-					return
-				}
-			}
-		}
-	}
 }
