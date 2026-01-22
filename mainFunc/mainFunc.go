@@ -1,30 +1,36 @@
 package MainFuncions
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 )
 
-func MakeRequest(client *http.Client, url, cookie string) {
+// for unit-tests
+type HTTPClientInterface interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+func MakeRequest(client HTTPClientInterface, url, cookie string) error {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Printf("Ошибка создания запроса на сервер %v:", err)
-		return
-	} else {
-		log.Print("Запрос создан!")
+		return fmt.Errorf("ошибка создания запроса на сервер %v", err)
 	}
 	req.Header.Add("Cookie", cookie)
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Printf("Ошибка выполнения %v", err)
-		return
+		return fmt.Errorf("ошибка выполнения %v", err)
 	}
 
 	defer resp.Body.Close()
-	log.Printf("Статус запроса: %s", resp.Status)
+	fmt.Printf("Статус запроса: %s\n", resp.Status)
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("ошибка: %s", resp.Status)
+	}
+	return nil
 }
 
 func MakeRequestStatus(client *http.Client, url, cookie string) bool {
