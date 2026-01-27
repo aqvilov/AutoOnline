@@ -282,5 +282,3 @@ docker run --rm autoonline-test go test ./...
 
 ---
 
-
----
