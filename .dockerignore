@@ -1,0 +1,26 @@
+
+*.exe
+*.out
+*.test
+tmp/
+temp/
+*.tmp
+*.temp
+
+# -- cache ignore
+vendor/
+go/pkg/
+go/bin/
+
+.vscode/
+.idea/
+*.swp
+*.swo
+
+*.log
+
+Dockerfile*
+.dockerignore
+.gitignore
+README.md
+LICENSE

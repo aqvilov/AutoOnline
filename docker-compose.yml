@@ -1,0 +1,9 @@
+version: '5.0'
+
+services:
+  autoonline:
+    image: autoonline-test:latest
+    container_name: autoonline-app
+    stdin_open: true  # интерактивный вывод
+    tty: true
+    restart: "no"
