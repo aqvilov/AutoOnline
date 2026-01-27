@@ -135,7 +135,7 @@ docker build -t autoonline-test .
 docker run --rm autoonline-test go test ./...
 ```
 
-
+## РАЗРАБОТЧИК
 **aqvilov**
 - GitHub: [@aqvilov](https://github.com/aqvilov)
 
@@ -276,7 +276,7 @@ docker build -t autoonline-test .
 docker run --rm autoonline-test go test ./...
 ```
 
-
+## DEVELOPER:
 **aqvilov**
 - GitHub: [@aqvilov](https://github.com/aqvilov)
 
